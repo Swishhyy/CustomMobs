@@ -1,0 +1,6 @@
+name: CustomMobs
+version: '0.0.1'
+main: me.swishhyy.customMobs.CustomMobs
+api-version: '1.21'
+load: STARTUP
+authors: [ Swishhyy ]
