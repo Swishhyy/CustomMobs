@@ -9,25 +9,20 @@ import java.util.logging.Logger;
  * Prints a colored ASCII art banner on plugin enable.
  */
 public final class BannerUtil {
-    private static final String ANSI_RESET = "\u001B[0m";
-    private static final String ANSI_CYAN = "\u001B[36m";
-    private static final String ANSI_PURPLE = "\u001B[35m";
-    private static final String ANSI_GREEN = "\u001B[32m";
-
     private BannerUtil() {}
 
     public static void printStartupBanner(Plugin plugin) {
         Logger log = plugin.getLogger();
         String version = plugin.getDescription().getVersion();
         String mcVersion = Bukkit.getServer().getVersion();
-        log.info(ANSI_PURPLE + "============================= CM =============================" + ANSI_RESET);
-        log.info(ANSI_CYAN +   "   ______   __  ___" + ANSI_RESET);
-        log.info(ANSI_CYAN +   "  / ____/  /  |/  /  (C)" + ANSI_RESET);
-        log.info(ANSI_CYAN +   " / /      / /|_/ /" + ANSI_RESET);
-        log.info(ANSI_CYAN +   "/ /___   / /  / /   (M)" + ANSI_RESET);
-        log.info(ANSI_CYAN +   "\\____/  /_/  /_/" + ANSI_RESET);
-        log.info(ANSI_PURPLE + "   CM - Authored by Swishhyy" + ANSI_RESET);
-        log.info(ANSI_GREEN +  "   Version: " + version + " | Server: " + mcVersion + ANSI_RESET);
-        log.info(ANSI_PURPLE + "==============================================================" + ANSI_RESET);
+        log.info(Colors.PURPLE + "============================= CM =============================" + Colors.RESET);
+        log.info(Colors.CYAN +   "   ______   __  ___" + Colors.RESET);
+        log.info(Colors.CYAN +   "  / ____/  /  |/  /  (C)" + Colors.RESET);
+        log.info(Colors.CYAN +   " / /      / /|_/ /" + Colors.RESET);
+        log.info(Colors.CYAN +   "/ /___   / /  / /   (M)" + Colors.RESET);
+        log.info(Colors.CYAN +   "\\____/  /_/  /_/" + Colors.RESET);
+        log.info(Colors.PURPLE + "   CM - Authored by Swishhyy" + Colors.RESET);
+        log.info(Colors.GREEN +  "   Version: " + version + " | Server: " + mcVersion + Colors.RESET);
+        log.info(Colors.PURPLE + "==============================================================" + Colors.RESET);
     }
 }

@@ -13,9 +13,6 @@ public class PoisonTouchAbility implements Ability {
     }
 
     @Override
-    public String getType() { return "POISON_TOUCH"; }
-
-    @Override
     public void execute(AbilityContext ctx) {
         if (ctx.getTarget() != null) {
             ctx.getTarget().addPotionEffect(new PotionEffect(PotionEffectType.POISON, durationTicks, amplifier));
