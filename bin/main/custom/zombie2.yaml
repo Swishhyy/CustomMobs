@@ -1,0 +1,10 @@
+type: ZOMBIE
+display: "&aZombie II"
+health: 40
+attack: 8
+abilities:
+  onHit:
+    poison:
+      type: POISON_TOUCH
+      duration: 100 # ticks
+      amplifier: 1

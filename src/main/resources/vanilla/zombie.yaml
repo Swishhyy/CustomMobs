@@ -1,0 +1,5 @@
+type: ZOMBIE
+display: "&7Zombie"
+health: 20
+attack: 3
+abilities: {}
