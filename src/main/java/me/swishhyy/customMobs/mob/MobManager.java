@@ -17,6 +17,7 @@ import org.bukkit.entity.LivingEntity;
 import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.attribute.Attribute;
+import org.bukkit.attribute.AttributeInstance;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import net.kyori.adventure.text.serializer.plain.PlainTextComponentSerializer;
@@ -48,6 +49,12 @@ public class MobManager {
         if (out.exists()) return;
         if (!out.getParentFile().exists()) out.getParentFile().mkdirs();
         plugin.saveResource(path, false);
+    }
+
+    public void reloadAll() {
+        definitions.clear();
+        loadMobConfigs("custom");
+        loadMobConfigs("vanilla");
     }
 
     public void loadMobConfigs(String type) {
@@ -93,10 +100,13 @@ public class MobManager {
         for (String child : sec.getKeys(false)) {
             ConfigurationSection abilitySec = sec.getConfigurationSection(child);
             if (abilitySec == null) continue;
-            String type = abilitySec.getString("type");
-            if (type == null) continue;
-            Ability a = abilityRegistry.create(parent, abilitySec);
-            if (a != null) out.add(a);
+            Ability a = abilityRegistry.create(abilitySec);
+            if (a != null) {
+                out.add(a);
+            } else {
+                String t = abilitySec.getString("type", "<missing>");
+                plugin.getLogger().warning("Unknown ability type '" + t + "' in section " + parent.getCurrentPath() + "." + key + "." + child);
+            }
         }
     }
 
@@ -107,7 +117,14 @@ public class MobManager {
     public LivingEntity spawn(String id, org.bukkit.Location loc) {
         MobDefinition def = get(id);
         if (def == null) return null;
-        EntityType type = EntityType.valueOf(def.type.toUpperCase());
+        EntityType type;
+        try {
+            type = EntityType.valueOf(def.type.toUpperCase());
+        } catch (IllegalArgumentException ex) {
+            plugin.getLogger().warning("Unknown entity type for mob '" + id + "': " + def.type);
+            return null;
+        }
+        if (loc.getWorld() == null) return null;
         LivingEntity ent = (LivingEntity) loc.getWorld().spawnEntity(loc, type);
         if (def.displayName != null) {
             Component name = LegacyComponentSerializer.legacyAmpersand().deserialize(def.displayName);
@@ -115,9 +132,14 @@ public class MobManager {
             ent.setCustomNameVisible(true);
         }
         ent.getPersistentDataContainer().set(mobIdKey, PersistentDataType.STRING, def.id);
-        if (ent.getAttribute(Attribute.MAX_HEALTH) != null) {
-            ent.getAttribute(Attribute.MAX_HEALTH).setBaseValue(def.health);
-            ent.setHealth(Math.min(def.health, ent.getAttribute(Attribute.MAX_HEALTH).getBaseValue()));
+        AttributeInstance maxHealth = ent.getAttribute(Attribute.MAX_HEALTH);
+        if (maxHealth != null) {
+            maxHealth.setBaseValue(def.health);
+            ent.setHealth(Math.min(def.health, maxHealth.getBaseValue()));
+        }
+        if (def.attack > 0) {
+            AttributeInstance attackAttr = ent.getAttribute(Attribute.ATTACK_DAMAGE);
+            if (attackAttr != null) attackAttr.setBaseValue(def.attack);
         }
         // Execute onSpawn abilities
         def.onSpawn.forEach(a -> a.execute(new AbilityContext(ent, null, null)));
@@ -162,5 +184,9 @@ public class MobManager {
         MobDefinition def = get(id);
         if (def == null) return;
         def.onDamaged.forEach(a -> a.execute(new AbilityContext(caster, damager, evt)));
+    }
+
+    public java.util.Set<String> getMobIds() {
+        return java.util.Collections.unmodifiableSet(definitions.keySet());
     }
 }

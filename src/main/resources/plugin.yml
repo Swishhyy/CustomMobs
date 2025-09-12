@@ -5,8 +5,16 @@ api-version: '1.21'
 load: STARTUP
 authors: [ Swishhyy ]
 
+permissions:
+  custommobs.spawn:
+    description: Allow spawning custom mobs
+    default: op
+  custommobs.reload:
+    description: Allow reloading custom mob configs
+    default: op
+
 commands:
-	cmspawn:
-		description: Spawn a configured mob by id
-		usage: /cmspawn <mobId>
-		permission: custommobs.spawn
+  cmspawn:
+    description: Spawn a configured mob by id or reload configs
+    usage: /cmspawn <mobId>|reload
+    permission: custommobs.spawn
