@@ -1,0 +1,6 @@
+
+auto-update:
+  enabled: false  # Set true to enable automatic update checks
+
+Debug:
+  enabled: false  # Set true to enable debug mode for detailed logs

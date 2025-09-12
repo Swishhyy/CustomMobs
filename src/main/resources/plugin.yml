@@ -6,15 +6,12 @@ load: STARTUP
 authors: [ Swishhyy ]
 
 permissions:
-  custommobs.spawn:
-    description: Allow spawning custom mobs
-    default: op
-  custommobs.reload:
-    description: Allow reloading custom mob configs
+  custommobs.admin:
+    description: Full access to CustomMobs commands and update notices
     default: op
 
 commands:
   cmspawn:
-    description: Spawn a configured mob by id or reload configs
-    usage: /cmspawn <mobId>|reload
-    permission: custommobs.spawn
+    description: Spawn a configured mob, reload configs, or run manual update
+    usage: /cmspawn <mobId>|reload|update
+    permission: custommobs.admin

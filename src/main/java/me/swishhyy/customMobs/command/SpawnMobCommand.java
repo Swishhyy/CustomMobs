@@ -11,24 +11,42 @@ import org.bukkit.command.CommandSender;
 import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
+import me.swishhyy.customMobs.CustomMobs;
 import me.swishhyy.customMobs.mob.MobManager;
 
 public class SpawnMobCommand implements CommandExecutor, TabCompleter {
     private final MobManager mobManager;
+    private final CustomMobs plugin;
 
-    public SpawnMobCommand(MobManager mobManager) {
+    public SpawnMobCommand(CustomMobs plugin, MobManager mobManager) {
+        this.plugin = plugin;
         this.mobManager = mobManager;
     }
 
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {
-            if (!sender.hasPermission("custommobs.reload")) {
+            if (!sender.hasPermission("custommobs.admin")) {
                 sender.sendMessage("No permission.");
                 return true;
             }
+            plugin.reloadConfig();
             mobManager.reloadAll();
+            if (plugin.getAutoUpdate() != null) plugin.getAutoUpdate().startOrSchedule();
             sender.sendMessage("CustomMobs: Reload complete. Loaded " + mobManager.getMobIds().size() + " mobs.");
+            return true;
+        }
+
+        if (args.length == 1 && args[0].equalsIgnoreCase("update")) {
+            if (!sender.hasPermission("custommobs.admin")) {
+                sender.sendMessage("No permission.");
+                return true;
+            }
+            if (plugin.getAutoUpdate() == null) {
+                sender.sendMessage("Auto-update module not available.");
+                return true;
+            }
+            plugin.getAutoUpdate().manualCheck(sender);
             return true;
         }
 
@@ -36,7 +54,7 @@ public class SpawnMobCommand implements CommandExecutor, TabCompleter {
             sender.sendMessage("Only players can use this command.");
             return true;
         }
-        if (!sender.hasPermission("custommobs.spawn")) {
+        if (!sender.hasPermission("custommobs.admin")) {
             sender.sendMessage("No permission.");
             return true;
         }
@@ -60,9 +78,10 @@ public class SpawnMobCommand implements CommandExecutor, TabCompleter {
         List<String> out = new ArrayList<>();
         if (args.length == 1) {
             String partial = args[0].toLowerCase(Locale.ROOT);
-            if ("reload".startsWith(partial) && sender.hasPermission("custommobs.reload")) {
+            if ("reload".startsWith(partial) && sender.hasPermission("custommobs.admin")) {
                 out.add("reload");
             }
+            if ("update".startsWith(partial) && sender.hasPermission("custommobs.admin")) out.add("update");
             for (String id : mobManager.getMobIds()) {
                 if (id.startsWith(partial)) out.add(id);
             }
