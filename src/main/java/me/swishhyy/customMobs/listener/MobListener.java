@@ -16,14 +16,21 @@ import me.swishhyy.customMobs.skills.SkillRuntime;
 public class MobListener implements Listener {
     private final MobManager mobManager;
 
-    public MobListener(MobManager mobManager) {
-        this.mobManager = mobManager;
-    }
+    public MobListener(MobManager mobManager) { this.mobManager = mobManager; }
 
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent e) {
         if (e.getDamager() instanceof LivingEntity && e.getEntity() instanceof LivingEntity) {
-            mobManager.handleHit((LivingEntity) e.getDamager(), (LivingEntity) e.getEntity(), e);
+            LivingEntity attacker = (LivingEntity) e.getDamager();
+            LivingEntity victim = (LivingEntity) e.getEntity();
+            MobDefinition attDef = mobManager.getDefinitionFromEntity(attacker);
+            MobDefinition vicDef = mobManager.getDefinitionFromEntity(victim);
+            if (attDef != null && vicDef != null) {
+                String af = attDef.faction() == null ? "mobs" : attDef.faction();
+                String vf = vicDef.faction() == null ? "mobs" : vicDef.faction();
+                if (af.equalsIgnoreCase(vf)) { e.setCancelled(true); return; }
+            }
+            mobManager.handleHit(attacker, victim, e);
         }
         if (e.getEntity() instanceof LivingEntity && e.getDamager() instanceof LivingEntity) {
             mobManager.handleDamaged((LivingEntity) e.getEntity(), (LivingEntity) e.getDamager(), e);
