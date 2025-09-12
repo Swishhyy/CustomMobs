@@ -12,7 +12,6 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import me.swishhyy.customMobs.CustomMobs;
-import me.swishhyy.customMobs.faction.FactionManager;
 import me.swishhyy.customMobs.mob.MobManager;
 import me.swishhyy.customMobs.util.CM;
 import me.swishhyy.customMobs.util.Msg;
@@ -36,11 +35,7 @@ public class SpawnMobCommand implements CommandExecutor, TabCompleter {
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
         if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {
             if (noPerm(sender)) return true;
-            plugin.reloadConfig();
-            mobManager.reloadAll();
-            FactionManager fm = plugin.getFactionManager(); if (fm != null) fm.reload();
-            if (plugin.getAutoUpdate() != null) plugin.getAutoUpdate().startOrSchedule();
-            Msg.send(sender, "§aReload complete. Loaded §f" + mobManager.getMobIds().size() + "§a mobs.");
+            plugin.fullReload(sender); // unified reload
             return true;
         }
 
