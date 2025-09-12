@@ -6,6 +6,7 @@ import java.util.Map;
 import me.swishhyy.customMobs.abilities.Ability;
 import me.swishhyy.customMobs.skills.SkillTrigger;
 import me.swishhyy.customMobs.skills.SkillNode;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 
 public final class MobDefinition {
     private final String id;
@@ -17,10 +18,14 @@ public final class MobDefinition {
     private final List<Ability> onHit;
     private final List<Ability> onDamaged;
     private final Map<SkillTrigger, List<SkillNode>> skills; // new skill system
+    private final Map<DamageCause, Double> damageMultipliers; // cause -> multiplier
+    private final List<DropSpec> drops; // custom drops
 
     public MobDefinition(String id, String type, double health, double attack, String displayName,
                          List<Ability> onSpawn, List<Ability> onHit, List<Ability> onDamaged,
-                         Map<SkillTrigger, List<SkillNode>> skills) {
+                         Map<SkillTrigger, List<SkillNode>> skills,
+                         Map<DamageCause, Double> damageMultipliers,
+                         List<DropSpec> drops) {
         this.id = id;
         this.type = type;
         this.health = health;
@@ -30,6 +35,8 @@ public final class MobDefinition {
         this.onHit = Collections.unmodifiableList(onHit);
         this.onDamaged = Collections.unmodifiableList(onDamaged);
         this.skills = skills == null ? Collections.emptyMap() : Collections.unmodifiableMap(skills);
+        this.damageMultipliers = damageMultipliers == null ? java.util.Collections.emptyMap() : java.util.Collections.unmodifiableMap(damageMultipliers);
+        this.drops = drops == null ? java.util.Collections.emptyList() : java.util.Collections.unmodifiableList(drops);
     }
 
     public String id() { return id; }
@@ -41,4 +48,6 @@ public final class MobDefinition {
     public List<Ability> onHit() { return onHit; }
     public List<Ability> onDamaged() { return onDamaged; }
     public Map<SkillTrigger, List<SkillNode>> skills() { return skills; }
+    public Map<DamageCause, Double> damageMultipliers() { return damageMultipliers; }
+    public List<DropSpec> drops() { return drops; }
 }

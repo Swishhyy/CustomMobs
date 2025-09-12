@@ -18,6 +18,8 @@ import org.bukkit.persistence.PersistentDataType;
 import org.bukkit.plugin.java.JavaPlugin;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.attribute.AttributeInstance;
+import org.bukkit.Material;
+import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
 import net.kyori.adventure.text.Component;
 import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 
@@ -82,6 +84,8 @@ public class MobManager {
         List<Ability> onHit = new ArrayList<>();
         List<Ability> onDamaged = new ArrayList<>();
         Map<SkillTrigger, List<SkillNode>> skills = new HashMap<>();
+        Map<DamageCause, Double> damageMods = new HashMap<>();
+        List<DropSpec> drops = new ArrayList<>();
 
         ConfigurationSection abilities = cfg.getConfigurationSection("abilities");
         if (abilities != null) {
@@ -112,13 +116,40 @@ public class MobManager {
                             SkillCondition sc = SkillConditionRegistry.INSTANCE.create(one); if (sc != null) conds.add(sc);
                         }
                     }
-                    nodes.add(new SkillNode(nodeKey, action, targeter, conds));
+                    long cooldownMs = 0L;
+                    if (nodeSec.contains("cooldownMs")) cooldownMs = nodeSec.getLong("cooldownMs");
+                    else if (nodeSec.contains("cooldown")) cooldownMs = nodeSec.getLong("cooldown");
+                    else if (nodeSec.contains("cooldownSeconds")) cooldownMs = nodeSec.getLong("cooldownSeconds") * 1000L;
+                    nodes.add(new SkillNode(nodeKey, action, targeter, conds, cooldownMs));
                 }
                 if (!nodes.isEmpty()) skills.put(trigger, nodes);
             }
         }
-
-        MobDefinition def = new MobDefinition(id, type, health, attack, displayName, onSpawn, onHit, onDamaged, skills);
+        // Damage modifiers
+        ConfigurationSection dmgSec = cfg.getConfigurationSection("damage_modifiers");
+        if (dmgSec != null) {
+            for (String causeKey : dmgSec.getKeys(false)) {
+                try {
+                    DamageCause cause = DamageCause.valueOf(causeKey.toUpperCase());
+                    double mult = dmgSec.getDouble(causeKey, 1.0);
+                    damageMods.put(cause, mult);
+                } catch (IllegalArgumentException ignored) {}
+            }
+        }
+        // Drops
+        ConfigurationSection dropsSec = cfg.getConfigurationSection("drops");
+        if (dropsSec != null) {
+            for (String dk : dropsSec.getKeys(false)) {
+                ConfigurationSection d = dropsSec.getConfigurationSection(dk); if (d == null) continue;
+                String matName = d.getString("type", d.getString("material", "STONE"));
+                Material mat = null; try { mat = Material.valueOf(matName.toUpperCase()); } catch (IllegalArgumentException ignored) {}
+                int min = d.getInt("min", 1);
+                int max = d.getInt("max", min);
+                double chance = d.getDouble("chance", 1.0);
+                if (mat != null && chance > 0) drops.add(new DropSpec(mat, min, max, chance));
+            }
+        }
+        MobDefinition def = new MobDefinition(id, type, health, attack, displayName, onSpawn, onHit, onDamaged, skills, damageMods, drops);
         definitions.put(id.toLowerCase(Locale.ROOT), def);
     }
 
@@ -185,4 +216,10 @@ public class MobManager {
     }
 
     public java.util.Set<String> getMobIds() { return java.util.Collections.unmodifiableSet(definitions.keySet()); }
+
+    public MobDefinition getDefinitionFromEntity(LivingEntity ent) {
+        if (ent == null) return null;
+        String id = ent.getPersistentDataContainer().get(mobIdKey, PersistentDataType.STRING);
+        return id == null ? null : get(id);
+    }
 }
