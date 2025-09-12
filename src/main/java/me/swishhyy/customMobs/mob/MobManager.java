@@ -24,6 +24,7 @@ import net.kyori.adventure.text.serializer.legacy.LegacyComponentSerializer;
 import me.swishhyy.customMobs.abilities.Ability;
 import me.swishhyy.customMobs.abilities.AbilityRegistry;
 import me.swishhyy.customMobs.abilities.AbilityContext;
+import me.swishhyy.customMobs.skills.*;
 
 public class MobManager {
     private final JavaPlugin plugin;
@@ -80,6 +81,7 @@ public class MobManager {
         List<Ability> onSpawn = new ArrayList<>();
         List<Ability> onHit = new ArrayList<>();
         List<Ability> onDamaged = new ArrayList<>();
+        Map<SkillTrigger, List<SkillNode>> skills = new HashMap<>();
 
         ConfigurationSection abilities = cfg.getConfigurationSection("abilities");
         if (abilities != null) {
@@ -89,7 +91,34 @@ public class MobManager {
             loadAbilityList(abilities, "onDamaged", onDamaged);
         }
 
-        MobDefinition def = new MobDefinition(id, type, health, attack, displayName, onSpawn, onHit, onDamaged);
+        ConfigurationSection skillsSec = cfg.getConfigurationSection("skills");
+        if (skillsSec != null) {
+            for (String trigKey : skillsSec.getKeys(false)) {
+                SkillTrigger trigger = null; try { trigger = SkillTrigger.valueOf(trigKey.toUpperCase()); } catch (IllegalArgumentException ignored) {}
+                if (trigger == null) continue;
+                ConfigurationSection listSec = skillsSec.getConfigurationSection(trigKey); if (listSec == null) continue;
+                List<SkillNode> nodes = new ArrayList<>();
+                for (String nodeKey : listSec.getKeys(false)) {
+                    ConfigurationSection nodeSec = listSec.getConfigurationSection(nodeKey); if (nodeSec == null) continue;
+                    SkillAction action = SkillActionRegistry.INSTANCE.create(nodeSec); if (action == null) continue;
+                    Targeter targeter = null;
+                    ConfigurationSection targeterSec = nodeSec.getConfigurationSection("targeter");
+                    if (targeterSec != null) targeter = Targeter.REGISTRY.create(targeterSec);
+                    List<SkillCondition> conds = new ArrayList<>();
+                    ConfigurationSection condSec = nodeSec.getConfigurationSection("conditions");
+                    if (condSec != null) {
+                        for (String cKey : condSec.getKeys(false)) {
+                            ConfigurationSection one = condSec.getConfigurationSection(cKey); if (one == null) continue;
+                            SkillCondition sc = SkillConditionRegistry.INSTANCE.create(one); if (sc != null) conds.add(sc);
+                        }
+                    }
+                    nodes.add(new SkillNode(nodeKey, action, targeter, conds));
+                }
+                if (!nodes.isEmpty()) skills.put(trigger, nodes);
+            }
+        }
+
+        MobDefinition def = new MobDefinition(id, type, health, attack, displayName, onSpawn, onHit, onDamaged, skills);
         definitions.put(id.toLowerCase(Locale.ROOT), def);
     }
 
@@ -100,8 +129,7 @@ public class MobManager {
             ConfigurationSection abilitySec = sec.getConfigurationSection(child);
             if (abilitySec == null) continue;
             Ability a = AbilityRegistry.INSTANCE.create(abilitySec);
-            if (a != null) out.add(a);
-            else plugin.getLogger().warning("Unknown ability type in section " + parent.getCurrentPath() + "." + key + "." + child);
+            if (a != null) out.add(a); else plugin.getLogger().warning("Unknown ability type in section " + parent.getCurrentPath() + "." + key + "." + child);
         }
     }
 
@@ -132,25 +160,28 @@ public class MobManager {
         }
         // Execute onSpawn abilities
         def.onSpawn().forEach(a -> a.execute(new AbilityContext(ent, null, null)));
+        // Execute new skill system ON_SPAWN
+        def.skills().getOrDefault(SkillTrigger.ON_SPAWN, java.util.Collections.emptyList())
+            .forEach(n -> n.execute(new SkillContext(ent, null, null, def)));
         return ent;
     }
 
     public LivingEntity spawnResolved(String query, org.bukkit.Location loc) { return spawn(query, loc); }
 
     public void handleHit(LivingEntity caster, LivingEntity target, org.bukkit.event.Event evt) {
-        String id = caster.getPersistentDataContainer().get(mobIdKey, PersistentDataType.STRING);
-        if (id == null) return;
-        MobDefinition def = get(id);
-        if (def == null) return;
+        String id = caster.getPersistentDataContainer().get(mobIdKey, PersistentDataType.STRING); if (id == null) return;
+        MobDefinition def = get(id); if (def == null) return;
         def.onHit().forEach(a -> a.execute(new AbilityContext(caster, target, evt)));
+        def.skills().getOrDefault(SkillTrigger.ON_HIT, java.util.Collections.emptyList())
+            .forEach(n -> n.execute(new SkillContext(caster, target, evt, def)));
     }
 
     public void handleDamaged(LivingEntity caster, LivingEntity damager, org.bukkit.event.Event evt) {
-        String id = caster.getPersistentDataContainer().get(mobIdKey, PersistentDataType.STRING);
-        if (id == null) return;
-        MobDefinition def = get(id);
-        if (def == null) return;
+        String id = caster.getPersistentDataContainer().get(mobIdKey, PersistentDataType.STRING); if (id == null) return;
+        MobDefinition def = get(id); if (def == null) return;
         def.onDamaged().forEach(a -> a.execute(new AbilityContext(caster, damager, evt)));
+        def.skills().getOrDefault(SkillTrigger.ON_DAMAGED, java.util.Collections.emptyList())
+            .forEach(n -> n.execute(new SkillContext(caster, damager, evt, def)));
     }
 
     public java.util.Set<String> getMobIds() { return java.util.Collections.unmodifiableSet(definitions.keySet()); }
