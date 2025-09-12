@@ -13,5 +13,5 @@ permissions:
 commands:
   cmspawn:
     description: Spawn a configured mob, reload configs, or run manual update
-    usage: /cmspawn <mobId>|reload|update
+    usage: /cmspawn <mobId>|reload|update|updatebeta
     permission: custommobs.admin

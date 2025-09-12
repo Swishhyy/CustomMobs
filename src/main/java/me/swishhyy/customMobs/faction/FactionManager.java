@@ -1,30 +1,41 @@
 package me.swishhyy.customMobs.faction;
 
-import org.bukkit.configuration.ConfigurationSection;
+import org.bukkit.configuration.file.FileConfiguration;
+import org.bukkit.configuration.file.YamlConfiguration;
 import org.bukkit.plugin.java.JavaPlugin;
 
+import java.io.File;
 import java.util.*;
 
 public final class FactionManager {
     private final JavaPlugin plugin;
     private final Map<String, FactionRelation> relations = new HashMap<>();
+    private File factionsFile;
 
-    public FactionManager(JavaPlugin plugin) { this.plugin = plugin; reload(); }
+    public FactionManager(JavaPlugin plugin) { this.plugin = plugin; init(); }
+
+    private void init() {
+        factionsFile = new File(plugin.getDataFolder(), "factions.yml");
+        if (!factionsFile.exists()) {
+            plugin.saveResource("factions.yml", false);
+        }
+        reload();
+    }
 
     public void reload() {
         relations.clear();
-        ConfigurationSection root = plugin.getConfig().getConfigurationSection("factions");
-        if (root == null) return;
-        for (String fac : root.getKeys(false)) {
-            ConfigurationSection sec = root.getConfigurationSection(fac);
-            if (sec == null) continue;
+        if (factionsFile == null) return;
+        FileConfiguration cfg = YamlConfiguration.loadConfiguration(factionsFile);
+        for (String fac : cfg.getKeys(false)) {
+            if (!(cfg.get(fac) instanceof org.bukkit.configuration.ConfigurationSection sec)) continue;
             Set<String> allies = new HashSet<>(sec.getStringList("allies"));
             Set<String> hostiles = new HashSet<>(sec.getStringList("hostiles"));
-            // Always allied to itself unless explicitly hostile
             allies.add(fac);
-            relations.put(fac.toLowerCase(Locale.ROOT), new FactionRelation(allies, hostiles));
+            relations.put(fac.toLowerCase(Locale.ROOT), new FactionRelation(toLower(allies), toLower(hostiles)));
         }
     }
+
+    private Set<String> toLower(Set<String> in) { Set<String> out = new HashSet<>(); for (String s: in) out.add(s.toLowerCase(Locale.ROOT)); return out; }
 
     public boolean areAllied(String a, String b) {
         if (a == null || b == null) return false;
@@ -45,4 +56,3 @@ public final class FactionManager {
 
     private record FactionRelation(Set<String> allies, Set<String> hostiles) {}
 }
-

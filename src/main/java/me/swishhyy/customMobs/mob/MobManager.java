@@ -34,10 +34,12 @@ public class MobManager {
     private final JavaPlugin plugin;
     private final Map<String, MobDefinition> definitions = new HashMap<>();
     private final NamespacedKey mobIdKey;
+    private final NamespacedKey naturalKey;
 
     public MobManager(JavaPlugin plugin) {
         this.plugin = plugin;
         this.mobIdKey = new NamespacedKey(plugin, "mob-id");
+        this.naturalKey = new NamespacedKey(plugin, "natural");
         ensureDefaultConfigs();
     }
 
@@ -94,7 +96,7 @@ public class MobManager {
         double attackPerLevel = cfg.getDouble("attack_per_level", 0.0);
         // natural spawn section
         boolean natEnabled = false; double natChance = 0.0; boolean natReplace = false; double natWeight = 1.0; java.util.Set<String> natBiomes = new HashSet<>();
-        Integer natCapChunk = null; Integer natCapBiome = null;
+        Integer natCapChunk = null;
         ConfigurationSection natSec = cfg.getConfigurationSection("natural");
         if (natSec != null) {
             natEnabled = natSec.getBoolean("enabled", false);
@@ -102,7 +104,6 @@ public class MobManager {
             natReplace = natSec.getBoolean("replace", false);
             natWeight = natSec.getDouble("weight", 1.0);
             if (natSec.isInt("cap_chunk")) natCapChunk = natSec.getInt("cap_chunk");
-            if (natSec.isInt("cap_biome")) natCapBiome = natSec.getInt("cap_biome");
             for (String b : natSec.getStringList("biomes")) natBiomes.add(b.toUpperCase(java.util.Locale.ROOT));
         }
         // existing lists
@@ -136,7 +137,7 @@ public class MobManager {
                 displayName, faction, passiveAI, minLevel, maxLevel, healthPerLevel, attackPerLevel,
                 onSpawn, onHit, onDamaged, skills, damageMods, drops,
                 natEnabled, natChance, natBiomes, natReplace, natWeight,
-                natCapChunk, natCapBiome);
+                natCapChunk);
         definitions.put(id.toLowerCase(Locale.ROOT), def);
     }
 
@@ -210,5 +211,19 @@ public class MobManager {
         if (ent == null) return null;
         String id = ent.getPersistentDataContainer().get(mobIdKey, PersistentDataType.STRING);
         return id == null ? null : get(id);
+    }
+
+    public JavaPlugin getPlugin() { return plugin; }
+    public NamespacedKey getNaturalKey() { return naturalKey; }
+
+    public LivingEntity spawnNatural(String id, org.bukkit.Location loc) {
+        LivingEntity ent = spawn(id, loc);
+        if (ent != null) {
+            ent.getPersistentDataContainer().set(naturalKey, PersistentDataType.BYTE, (byte)1);
+        }
+        return ent;
+    }
+    public boolean isNatural(LivingEntity ent) {
+        return ent.getPersistentDataContainer().has(naturalKey, PersistentDataType.BYTE);
     }
 }

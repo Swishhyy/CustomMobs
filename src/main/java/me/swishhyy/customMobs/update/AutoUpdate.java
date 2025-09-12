@@ -52,41 +52,89 @@ public class AutoUpdate {
     private void runCheckSafe() { try { log.info(Colors.CYAN + PREFIX + "Checking for updates..." + Colors.RESET); runCheck(); } catch (Exception ex) { log.warning(Colors.RED + PREFIX + "Auto-update check failed: " + ex.getMessage() + Colors.RESET); } }
 
     public void manualCheck(org.bukkit.command.CommandSender sender) {
-        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> {
-            if (!CM.isAutoUpdateEnabled(plugin)) { Msg.send(sender, "§cAuto-update disabled in config."); return; }
-            try {
-                log.info(Colors.CYAN + PREFIX + "Manual update check triggered by " + sender.getName() + "..." + Colors.RESET);
-                String currentVersion = plugin.getDescription().getVersion();
-                ReleaseInfo latest = fetchLatestRelease();
-                if (latest == null) { Msg.send(sender, "§eNo release info available."); log.info(Colors.YELLOW + PREFIX + "No release info from GitHub API." + Colors.RESET); return; }
-                if (!isNewer(latest.tagName, currentVersion)) {
-                    if (latest.tagName.equalsIgnoreCase(lastDownloadedVersion)) {
-                        Msg.send(sender, "§eLatest version §a" + latest.tagName + " §ealready downloaded. Restart to apply.");
-                        log.info(Colors.YELLOW + PREFIX + "Already downloaded " + latest.tagName + " (awaiting restart)." + Colors.RESET);
-                    } else {
-                        Msg.send(sender, "§aUp to date (§f" + currentVersion + "§a).");
-                        log.info(Colors.GREEN + PREFIX + "Up to date (" + currentVersion + ")." + Colors.RESET);
-                    }
-                    return;
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> runManual(sender, false));
+    }
+
+    public void manualCheckBeta(org.bukkit.command.CommandSender sender) {
+        Bukkit.getScheduler().runTaskAsynchronously(plugin, () -> runManual(sender, true));
+    }
+
+    private void runManual(org.bukkit.command.CommandSender sender, boolean allowPrerelease) {
+        if (!CM.isAutoUpdateEnabled(plugin)) { Msg.send(sender, "§cAuto-update disabled in config."); return; }
+        try {
+            log.info(Colors.CYAN + PREFIX + "Manual update check (beta=" + allowPrerelease + ") by " + sender.getName() + "..." + Colors.RESET);
+            String currentVersion = plugin.getDescription().getVersion();
+            ReleaseInfo latest = fetchDesiredRelease(allowPrerelease || plugin.getConfig().getBoolean("auto-update.beta", false));
+            if (latest == null) { Msg.send(sender, "§eNo release info available."); log.info(Colors.YELLOW + PREFIX + "No release info from GitHub API." + Colors.RESET); return; }
+            if (!isNewer(latest.tagName, currentVersion)) {
+                if (latest.tagName.equalsIgnoreCase(lastDownloadedVersion)) {
+                    Msg.send(sender, "§eLatest version §a" + latest.tagName + " §ealready downloaded. Restart to apply.");
+                    log.info(Colors.YELLOW + PREFIX + "Already downloaded " + latest.tagName + " (awaiting restart)." + Colors.RESET);
+                } else {
+                    Msg.send(sender, "§aUp to date (��f" + currentVersion + "§a).");
+                    log.info(Colors.GREEN + PREFIX + "Up to date (" + currentVersion + ")." + Colors.RESET);
                 }
-                if (latest.assetDownloadUrl == null) { Msg.send(sender, "§cNo .jar asset found in latest release."); log.warning(Colors.RED + PREFIX + "No jar asset in release " + latest.tagName + "." + Colors.RESET); return; }
-                Msg.send(sender, "§bDownloading §f" + latest.tagName + "§b...");
-                log.info(Colors.CYAN + PREFIX + "Update found: current=" + currentVersion + " latest=" + latest.tagName + " -> downloading..." + Colors.RESET);
-                downloadAsset(latest.assetDownloadUrl, currentVersion, latest.tagName);
-                Msg.send(sender, "§aDownload complete. Restart or reload to apply.");
-            } catch (Exception ex) { Msg.send(sender, "§cUpdate check failed: " + ex.getMessage()); log.warning(Colors.RED + PREFIX + "Manual update check failed: " + ex.getMessage() + Colors.RESET); }
-        });
+                return;
+            }
+            if (latest.assetDownloadUrl == null) { Msg.send(sender, "§cNo .jar asset found in selected release."); log.warning(Colors.RED + PREFIX + "No jar asset in release " + latest.tagName + "." + Colors.RESET); return; }
+            Msg.send(sender, "§bDownloading §f" + latest.tagName + "§b...");
+            log.info(Colors.CYAN + PREFIX + "Update found: current=" + currentVersion + " target=" + latest.tagName + " -> downloading..." + Colors.RESET);
+            downloadAsset(latest.assetDownloadUrl, currentVersion, latest.tagName);
+            Msg.send(sender, "§aDownload complete. Restart or reload to apply.");
+        } catch (Exception ex) { Msg.send(sender, "§cUpdate check failed: " + ex.getMessage()); log.warning(Colors.RED + PREFIX + "Manual update check failed: " + ex.getMessage() + Colors.RESET); }
     }
 
     private void runCheck() throws IOException {
         if (!CM.isAutoUpdateEnabled(plugin)) return;
+        boolean allowPrerelease = plugin.getConfig().getBoolean("auto-update.beta", false);
         String currentVersion = plugin.getDescription().getVersion();
-        ReleaseInfo latest = fetchLatestRelease();
+        ReleaseInfo latest = fetchDesiredRelease(allowPrerelease);
         if (latest == null) { log.info(Colors.YELLOW + PREFIX + "No release info received." + Colors.RESET); return; }
         if (!isNewer(latest.tagName, currentVersion)) { log.info(Colors.GREEN + PREFIX + "Up to date (" + currentVersion + ")." + Colors.RESET); return; }
         if (latest.assetDownloadUrl == null) { log.warning(Colors.RED + PREFIX + "No .jar asset in release " + latest.tagName + "." + Colors.RESET); return; }
         log.info(Colors.CYAN + PREFIX + "Update found: current=" + currentVersion + " latest=" + latest.tagName + " -> downloading..." + Colors.RESET);
         downloadAsset(latest.assetDownloadUrl, currentVersion, latest.tagName);
+    }
+
+    private ReleaseInfo fetchDesiredRelease(boolean allowPrerelease) throws IOException {
+        if (!allowPrerelease) return fetchLatestRelease();
+        HttpURLConnection conn = (HttpURLConnection) new URL("https://api.github.com/repos/" + REPO + "/releases").openConnection();
+        conn.setRequestProperty("Accept", "application/vnd.github+json");
+        conn.setRequestProperty("User-Agent", "CustomMobs-Updater");
+        if (conn.getResponseCode() != 200) return null;
+        String json;
+        try (InputStream in = conn.getInputStream()) { json = new String(in.readAllBytes(), StandardCharsets.UTF_8); }
+        // Very naive array parsing: split on '{' occurrences (lightweight, no external JSON)
+        int idx = 0; ReleaseInfo chosen = null;
+        while (true) {
+            int objStart = json.indexOf('{', idx); if (objStart < 0) break;
+            int objEnd = json.indexOf("}\n", objStart); if (objEnd < 0) objEnd = json.indexOf('}', objStart); if (objEnd < 0) break;
+            String obj = json.substring(objStart, objEnd + 1);
+            if (obj.contains("\"draft\":true")) { idx = objEnd + 1; continue; }
+            String prereleaseFlag = extract(obj, "prerelease"); // may return "true" or "false" or null
+            if (prereleaseFlag != null && prereleaseFlag.equals("false") || prereleaseFlag != null && prereleaseFlag.equals("true")) {
+                // Accept first non-draft (either prerelease or release) as chosen
+                String tag = extract(obj, "tag_name");
+                if (tag != null) {
+                    ReleaseInfo info = new ReleaseInfo();
+                    info.tagName = tag.startsWith("v") ? tag.substring(1) : tag;
+                    // find asset jar
+                    String assetUrl = null;
+                    int aIdx = obj.indexOf("assets");
+                    if (aIdx >= 0) {
+                        int aStart = obj.indexOf('[', aIdx), aEnd = obj.indexOf(']', aStart);
+                        if (aStart > 0 && aEnd > aStart) {
+                            String arr = obj.substring(aStart, aEnd + 1);
+                            int p = 0; while (true) { int n = arr.indexOf("\"name\"", p); if (n < 0) break; String name = extractFrom(arr, "name", n); if (name != null && name.toLowerCase().endsWith(".jar")) { String sub = arr.substring(n); String urlMatch = extract(sub, "browser_download_url"); if (urlMatch != null) { assetUrl = urlMatch; break; } } p = n + 1; }
+                        }
+                    }
+                    info.assetDownloadUrl = assetUrl;
+                    chosen = info; break;
+                }
+            }
+            idx = objEnd + 1;
+        }
+        return chosen;
     }
 
     private void downloadAsset(String url, String oldVersion, String newVersion) throws IOException {

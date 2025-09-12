@@ -12,6 +12,7 @@ import org.bukkit.command.TabCompleter;
 import org.bukkit.entity.Player;
 
 import me.swishhyy.customMobs.CustomMobs;
+import me.swishhyy.customMobs.faction.FactionManager;
 import me.swishhyy.customMobs.mob.MobManager;
 import me.swishhyy.customMobs.util.CM;
 import me.swishhyy.customMobs.util.Msg;
@@ -37,6 +38,7 @@ public class SpawnMobCommand implements CommandExecutor, TabCompleter {
             if (noPerm(sender)) return true;
             plugin.reloadConfig();
             mobManager.reloadAll();
+            FactionManager fm = plugin.getFactionManager(); if (fm != null) fm.reload();
             if (plugin.getAutoUpdate() != null) plugin.getAutoUpdate().startOrSchedule();
             Msg.send(sender, "§aReload complete. Loaded §f" + mobManager.getMobIds().size() + "§a mobs.");
             return true;
@@ -46,6 +48,13 @@ public class SpawnMobCommand implements CommandExecutor, TabCompleter {
             if (noPerm(sender)) return true;
             if (plugin.getAutoUpdate() == null) { Msg.send(sender, "§cAuto-update module not available."); return true; }
             plugin.getAutoUpdate().manualCheck(sender);
+            return true;
+        }
+
+        if (args.length == 1 && args[0].equalsIgnoreCase("updatebeta")) {
+            if (noPerm(sender)) return true;
+            if (plugin.getAutoUpdate() == null) { Msg.send(sender, "§cAuto-update module not available."); return true; }
+            plugin.getAutoUpdate().manualCheckBeta(sender);
             return true;
         }
 
@@ -70,6 +79,7 @@ public class SpawnMobCommand implements CommandExecutor, TabCompleter {
             String partial = args[0].toLowerCase(Locale.ROOT);
             if ("reload".startsWith(partial) && sender.hasPermission(CM.PERM_ADMIN)) out.add("reload");
             if ("update".startsWith(partial) && sender.hasPermission(CM.PERM_ADMIN)) out.add("update");
+            if ("updatebeta".startsWith(partial) && sender.hasPermission(CM.PERM_ADMIN)) out.add("updatebeta");
             for (String id : mobManager.getMobIds()) if (id.startsWith(partial)) out.add(id);
         }
         return out;

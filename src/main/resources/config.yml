@@ -1,31 +1,9 @@
 auto-update:
-  enabled: false  # Set true to enable automatic update checks
+  enabled: false
+  beta: false  # If true, allow updating to latest prerelease (beta) versions
 
 Debug:
-  enabled: false  # Set true to enable debug mode for detailed logs
-
-factions:
-  undead:
-    allies: [undead]
-    hostiles: [villager]
-  villager:
-    allies: [villager]
-    hostiles: [undead]
+  enabled: false
 
 natural-global:
-  chunk-cap: 60      # Max total custom mobs per chunk (<=0 disables)
-  biome-cap: 400     # Max total custom mobs in same biome (<=0 disables)
-
-natural-spawn:
-  enabled: false          # Master toggle
-  replace-vanilla: false  # If true, cancels original and replaces with custom
-  global-chance: 0.05     # Chance per natural spawn attempt to roll a custom mob
-  biome-pools:            # Map biome -> pool name (uses uppercase biome names)
-    PLAINS: default
-    FOREST: default
-  pools:
-    default:
-      mobs:
-        - zombie2:1       # format: <mobId>:<weight>
-  max-nearby-radius: 32   # Prevent overpopulation: radius scan
-  max-nearby-count: 40    # If >= this many living entities nearby, skip custom spawn
+  chunk-cap: 60

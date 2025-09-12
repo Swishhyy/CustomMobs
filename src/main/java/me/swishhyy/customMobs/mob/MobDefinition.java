@@ -38,8 +38,7 @@ public final class MobDefinition {
     private final java.util.Set<String> naturalBiomes; // upper-case biome names
     private final boolean naturalReplace;
     private final double naturalWeight;
-    private final Integer naturalCapChunk;
-    private final Integer naturalCapBiome;
+    private final Integer naturalCapChunk; // removed naturalCapBiome
 
     public MobDefinition(String id, String type, double health, double attack,
                          Double speed, Double followRange, Double armor, Double armorToughness, Double knockbackResist,
@@ -51,7 +50,7 @@ public final class MobDefinition {
                          List<DropSpec> drops,
                          boolean naturalEnabled, double naturalChance, java.util.Set<String> naturalBiomes,
                          boolean naturalReplace, double naturalWeight,
-                         Integer naturalCapChunk, Integer naturalCapBiome) {
+                         Integer naturalCapChunk) {
         this.id = id;
         this.type = type;
         this.health = health;
@@ -80,7 +79,6 @@ public final class MobDefinition {
         this.naturalReplace = naturalReplace;
         this.naturalWeight = naturalWeight;
         this.naturalCapChunk = naturalCapChunk;
-        this.naturalCapBiome = naturalCapBiome;
     }
 
     public String id() { return id; }
@@ -112,5 +110,4 @@ public final class MobDefinition {
     public boolean naturalReplace() { return naturalReplace; }
     public double naturalWeight() { return naturalWeight; }
     public Integer naturalCapChunk() { return naturalCapChunk; }
-    public Integer naturalCapBiome() { return naturalCapBiome; }
 }

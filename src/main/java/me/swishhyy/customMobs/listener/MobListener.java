@@ -12,11 +12,16 @@ import me.swishhyy.customMobs.mob.MobManager;
 import me.swishhyy.customMobs.mob.MobDefinition;
 import me.swishhyy.customMobs.mob.DropSpec;
 import me.swishhyy.customMobs.skills.SkillRuntime;
+import me.swishhyy.customMobs.faction.FactionManager;
 
 public class MobListener implements Listener {
     private final MobManager mobManager;
+    private final FactionManager factionManager;
 
-    public MobListener(MobManager mobManager) { this.mobManager = mobManager; }
+    public MobListener(MobManager mobManager, FactionManager factionManager) {
+        this.mobManager = mobManager;
+        this.factionManager = factionManager;
+    }
 
     @EventHandler
     public void onEntityDamageByEntity(EntityDamageByEntityEvent e) {
@@ -28,7 +33,10 @@ public class MobListener implements Listener {
             if (attDef != null && vicDef != null) {
                 String af = attDef.faction() == null ? "mobs" : attDef.faction();
                 String vf = vicDef.faction() == null ? "mobs" : vicDef.faction();
-                if (af.equalsIgnoreCase(vf)) { e.setCancelled(true); return; }
+                if (af.equalsIgnoreCase(vf) || (factionManager != null && factionManager.areAllied(af, vf))) {
+                    e.setCancelled(true);
+                    return;
+                }
             }
             mobManager.handleHit(attacker, victim, e);
         }
