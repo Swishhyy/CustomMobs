@@ -8,6 +8,8 @@ import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.plugin.java.JavaPlugin;
+import org.bukkit.block.Biome;
+import org.jetbrains.annotations.NotNull;
 
 import java.util.*;
 import java.util.concurrent.ThreadLocalRandom;
@@ -23,7 +25,7 @@ public class NaturalSpawnManager {
     private double globalChance;
     private int maxNearbyRadius;
     private int maxNearbyCount;
-    private Map<String, String> biomePools = new HashMap<>(); // biome -> pool id
+    private final Map<String, String> biomePools = new HashMap<>(); // biome -> pool id
     private Map<String, List<WeightedMob>> pools = new HashMap<>(); // pool id -> weighted list
 
     public NaturalSpawnManager(JavaPlugin plugin, MobManager mobManager) {
@@ -31,6 +33,10 @@ public class NaturalSpawnManager {
         this.mobManager = mobManager;
         this.log = plugin.getLogger();
         reloadConfig();
+    }
+
+    private static String biomeKey(Biome b) {
+        try { return b.getKey().getKey().toUpperCase(Locale.ROOT); } catch (Throwable t) { return b.toString().toUpperCase(Locale.ROOT); }
     }
 
     public void reloadConfig() {
@@ -55,22 +61,27 @@ public class NaturalSpawnManager {
                 ConfigurationSection pSec = poolsSec.getConfigurationSection(poolId);
                 if (pSec == null) continue;
                 List<String> mobLines = pSec.getStringList("mobs");
-                List<WeightedMob> list = new ArrayList<>();
-                for (String line : mobLines) {
-                    String[] parts = line.split(":");
-                    if (parts.length == 0) continue;
-                    String mobId = parts[0].trim();
-                    double weight = 1.0;
-                    if (parts.length > 1) {
-                        try { weight = Double.parseDouble(parts[1]); } catch (NumberFormatException ignored) {}
-                    }
-                    if (weight <= 0) continue;
-                    list.add(new WeightedMob(mobId, weight));
-                }
+                List<WeightedMob> list = getWeightedMobs(mobLines);
                 if (!list.isEmpty()) pools.put(poolId.toLowerCase(Locale.ROOT), list);
             }
         }
         debug("Natural spawn config loaded: enabled=" + enabled + ", pools=" + pools.size());
+    }
+
+    private static @NotNull List<WeightedMob> getWeightedMobs(List<String> mobLines) {
+        List<WeightedMob> list = new ArrayList<>();
+        for (String line : mobLines) {
+            String[] parts = line.split(":");
+            if (parts.length == 0) continue;
+            String mobId = parts[0].trim();
+            double weight = 1.0;
+            if (parts.length > 1) {
+                try { weight = Double.parseDouble(parts[1]); } catch (NumberFormatException ignored) {}
+            }
+            if (weight <= 0) continue;
+            list.add(new WeightedMob(mobId, weight));
+        }
+        return list;
     }
 
     private double clamp01(double v) { return v < 0 ? 0 : Math.min(1.0, v); }
@@ -82,7 +93,7 @@ public class NaturalSpawnManager {
         Location loc = event.getLocation();
         World world = loc.getWorld();
         if (world == null) return;
-        String biomeName = world.getBiome(loc).name().toUpperCase(Locale.ROOT);
+        String biomeName = biomeKey(world.getBiome(loc));
         String pool = biomePools.getOrDefault(biomeName, "default");
         List<WeightedMob> list = pools.get(pool.toLowerCase(Locale.ROOT));
         if (list == null || list.isEmpty()) return;
@@ -132,4 +143,3 @@ public class NaturalSpawnManager {
         WeightedMob(String mobId, double weight) { this.mobId = mobId; this.weight = weight; }
     }
 }
-

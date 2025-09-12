@@ -10,6 +10,7 @@ import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.LivingEntity;
 import org.bukkit.Chunk;
+import org.bukkit.block.Biome;
 
 import java.util.ArrayList;
 import java.util.List;
@@ -21,11 +22,15 @@ public class NaturalSpawnListener implements Listener {
 
     public NaturalSpawnListener(MobManager mobManager) { this.mobManager = mobManager; }
 
+    private static String biomeKey(Biome b) {
+        try { return b.getKey().getKey().toUpperCase(Locale.ROOT); } catch (Throwable t) { return b.toString().toUpperCase(Locale.ROOT); }
+    }
+
     @EventHandler
     public void onCreatureSpawn(CreatureSpawnEvent e) {
         if (e.getSpawnReason() != CreatureSpawnEvent.SpawnReason.NATURAL) return;
         Location loc = e.getLocation(); World world = loc.getWorld(); if (world == null) return;
-        String biome = world.getBiome(loc).name().toUpperCase(Locale.ROOT);
+        String biome = biomeKey(world.getBiome(loc));
         int globalChunkCap = mobManager.getPlugin().getConfig().getInt("natural-global.chunk-cap", 0);
         if (globalChunkCap > 0 && countNaturalCustomInChunk(loc.getChunk()) >= globalChunkCap) return;
         List<Candidate> candidates = new ArrayList<>(); double total = 0;
