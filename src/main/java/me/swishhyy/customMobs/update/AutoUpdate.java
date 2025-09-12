@@ -46,7 +46,6 @@ public class AutoUpdate {
     private static final String ANSI_CYAN = "\u001B[36m";
     private static final String ANSI_YELLOW = "\u001B[33m";
     private static final String ANSI_RED = "\u001B[31m";
-    private static final String ANSI_MAGENTA = "\u001B[35m";
     private static final String PREFIX = "[CustomMobs] ";
 
     public AutoUpdate(JavaPlugin plugin) {
@@ -85,23 +84,9 @@ public class AutoUpdate {
         });
     }
 
-    private void bannerLine(String line) { log.info(ANSI_MAGENTA + line + ANSI_RESET); }
-
-    private void printUpdateBanner(String context) {
-        bannerLine("//====================================================\\");
-        bannerLine("   _____          _                 __  __       _     ");
-        bannerLine("  / ____|        | |               |  \\|  |     | |    ");
-        bannerLine(" | |    _   _ ___| |_ ___ _ __ ___ | |\\ | | ___ | |__  ");
-        bannerLine(" | |   | | | / __| __/ _ \\ '_ ` _ \\| | \\| |/ _ \\ '_ \\ ");
-        bannerLine(" | |___| |_| \\__ \\ ||  __/ | | | | | |\\  |  __/ |_) | ");
-        bannerLine("  \\_____\\__,_|___/\\__\\___|_| |_| |_| |_|_|\\___|_.__/  ");
-        bannerLine("        Authored by Swishhyy | " + context);
-        bannerLine("\\====================================================//");
-    }
-
     private void runCheckSafe() {
         try {
-            printUpdateBanner("Auto Check");
+            // Minimal logging only (removed ASCII art banner to reduce log clutter)
             log.info(ANSI_CYAN + PREFIX + "Checking for updates..." + ANSI_RESET);
             runCheck();
         } catch (Exception ex) {
@@ -116,8 +101,7 @@ public class AutoUpdate {
                 return;
             }
             try {
-                printUpdateBanner("Manual Trigger: " + sender.getName());
-                log.info(ANSI_CYAN + PREFIX + "Checking for updates..." + ANSI_RESET);
+                log.info(ANSI_CYAN + PREFIX + "Manual update check triggered by " + sender.getName() + "..." + ANSI_RESET);
                 String currentVersion = plugin.getDescription().getVersion();
                 ReleaseInfo latest = fetchLatestRelease();
                 if (latest == null) { sender.sendMessage("§8[§aCustomMobs§8] §eNo release info available."); log.info(ANSI_YELLOW + PREFIX + "No release info from GitHub API." + ANSI_RESET); return; }
