@@ -6,6 +6,7 @@ import me.swishhyy.customMobs.mob.MobManager;
 import me.swishhyy.customMobs.listener.MobListener;
 import me.swishhyy.customMobs.command.SpawnMobCommand;
 import me.swishhyy.customMobs.update.AutoUpdate;
+import me.swishhyy.customMobs.util.BannerUtil;
 
 public final class CustomMobs extends JavaPlugin {
 
@@ -14,6 +15,7 @@ public final class CustomMobs extends JavaPlugin {
 
     @Override
     public void onEnable() {
+        BannerUtil.printStartupBanner(this);
         saveDefaultConfig();
         mobManager = new MobManager(this);
         mobManager.reloadAll();
