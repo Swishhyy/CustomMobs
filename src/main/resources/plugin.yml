@@ -1,5 +1,7 @@
 name: CustomMobs
 version: '${version}'
+description: A Custom Mob Framework implementation.
+website: https://github.com/Swishhyy/CustomMobs
 main: me.swishhyy.customMobs.CustomMobs
 api-version: '1.21'
 load: STARTUP
