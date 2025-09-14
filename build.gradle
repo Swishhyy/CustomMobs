@@ -14,12 +14,14 @@ repositories {
     }
     // MoneyFromMobs via JitPack
     maven { url = 'https://jitpack.io' }
+    // Rosewood (for transitive dev.rosewood:rosestacker pulled by MoneyFromMobs)
+    maven { url = 'https://repo.rosewooddev.io/repository/public/' }
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
-    // Optional: MoneyFromMobs API (softdepend)
-    compileOnly 'com.github.chocolf:MoneyFromMobs:4.9'
+    // Optional: MoneyFromMobs API (softdepend) - disable transitive deps if you don't need them locally
+    compileOnly('com.github.chocolf:MoneyFromMobs:4.9') { transitive = true }
 }
 
 tasks {
