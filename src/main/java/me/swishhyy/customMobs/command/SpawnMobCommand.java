@@ -32,7 +32,7 @@ public class SpawnMobCommand implements CommandExecutor, TabCompleter {
     }
 
     private void sendRootUsage(CommandSender sender) {
-        Msg.send(sender, "§7Usage: §f/cm reload | update | updatebeta | spawn <mobId>");
+        Msg.send(sender, "§7Usage: §f/cm reload | check-for-update | spawn <mobId>");
     }
 
     @Override
@@ -46,16 +46,10 @@ public class SpawnMobCommand implements CommandExecutor, TabCompleter {
                 plugin.fullReload(sender);
                 return true;
             }
-            case "update" -> {
+            case "check-for-update" -> {
                 if (noPerm(sender)) return true;
                 if (plugin.getAutoUpdate() == null) { Msg.send(sender, "§cAuto-update module not available."); return true; }
                 plugin.getAutoUpdate().manualCheck(sender);
-                return true;
-            }
-            case "updatebeta" -> {
-                if (noPerm(sender)) return true;
-                if (plugin.getAutoUpdate() == null) { Msg.send(sender, "§cAuto-update module not available."); return true; }
-                plugin.getAutoUpdate().manualCheckBeta(sender);
                 return true;
             }
             case "spawn" -> {
@@ -85,8 +79,7 @@ public class SpawnMobCommand implements CommandExecutor, TabCompleter {
         if (args.length == 1) {
             String partial = args[0].toLowerCase(Locale.ROOT);
             if ("reload".startsWith(partial) && sender.hasPermission(CM.PERM_ADMIN)) out.add("reload");
-            if ("update".startsWith(partial) && sender.hasPermission(CM.PERM_ADMIN)) out.add("update");
-            if ("updatebeta".startsWith(partial) && sender.hasPermission(CM.PERM_ADMIN)) out.add("updatebeta");
+            if ("check-for-update".startsWith(partial) && sender.hasPermission(CM.PERM_ADMIN)) out.add("check-for-update");
             if ("spawn".startsWith(partial) && sender.hasPermission(CM.PERM_ADMIN)) out.add("spawn");
         } else if (args.length == 2 && args[0].equalsIgnoreCase("spawn")) {
             String partial = args[1].toLowerCase(Locale.ROOT);

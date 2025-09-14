@@ -1,9 +1,9 @@
 auto-update:
-  enabled: false
-  beta: false  # If true, allow updating to latest prerelease (beta) versions
+  enabled: true  # If true, check for updates on server start
+  beta: false    # If true, allow prerelease (beta) versions
 
 Debug:
-  enabled: false
+  enabled: false # If true, enable debug logging
 
 natural-global:
-  chunk-cap: 60
+  chunk-cap: 60 # Maximum number of custom mobs allowed per chunk naturally

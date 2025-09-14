@@ -15,6 +15,6 @@ permissions:
 
 commands:
   cm:
-    description: Root command for CustomMobs (reload, update, spawn, etc.)
-    usage: /cm <reload|update|updatebeta|spawn>
+    description: Root command for CustomMobs (reload, check updates, spawn, etc.)
+    usage: /cm <reload|check-for-update|spawn>
     permission: custommobs.admin
