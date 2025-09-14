@@ -11,7 +11,7 @@ permissions:
     default: op
 
 commands:
-  cmspawn:
-    description: Spawn a configured mob, reload configs, or run manual update
-    usage: /cmspawn <mobId>|reload|update|updatebeta
+  cm:
+    description: Root command for CustomMobs (reload, update, spawn, etc.)
+    usage: /cm <reload|update|updatebeta|spawn>
     permission: custommobs.admin

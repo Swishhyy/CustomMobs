@@ -29,17 +29,18 @@ public final class CustomMobs extends JavaPlugin {
         autoUpdate.startOrSchedule();
         getServer().getPluginManager().registerEvents(new MobListener(mobManager, factionManager), this);
         getServer().getPluginManager().registerEvents(new NaturalSpawnListener(mobManager), this);
-        if (getCommand("cmspawn") != null) {
+        // Register root command /cm with subcommands
+        if (getCommand("cm") != null) {
             SpawnMobCommand cmd = new SpawnMobCommand(this, mobManager);
-            getCommand("cmspawn").setExecutor(cmd);
-            getCommand("cmspawn").setTabCompleter(cmd);
+            getCommand("cm").setExecutor(cmd);
+            getCommand("cm").setTabCompleter(cmd);
         }
     }
 
     @Override
     public void onDisable() { if (autoUpdate != null) autoUpdate.shutdown(); }
 
-    // Unified full reload invoked by /cmspawn reload
+    // Unified full reload invoked by /cm reload
     public void fullReload(CommandSender sender) {
         long start = System.currentTimeMillis();
         reloadConfig();
@@ -48,7 +49,7 @@ public final class CustomMobs extends JavaPlugin {
         if (autoUpdate != null) autoUpdate.startOrSchedule();
         long took = System.currentTimeMillis() - start;
         if (sender != null) {
-            Msg.send(sender, "§aReload complete. §7(\u00A7f" + mobManager.getMobIds().size() + " mobs, " + took + "ms)§r");
+            Msg.send(sender, "§aReload complete. §7(§f" + mobManager.getMobIds().size() + " mobs, " + took + "ms)§r");
         } else {
             getLogger().info("Reload complete (" + mobManager.getMobIds().size() + " mobs, " + took + "ms)");
         }

@@ -1,0 +1,16 @@
+# Default factions configuration for CustomMobs
+# Add new factions here. Each faction can list allies and hostiles.
+# Factions with the same name (case-insensitive) are always allied automatically.
+# Example:
+# undead:
+#   allies: [ undead ]
+#   hostiles: [ player ]
+
+mobs:
+  allies: [ mobs ]
+  hostiles: [ player ]
+
+player:
+  allies: [ player ]
+  hostiles: [ mobs ]
+

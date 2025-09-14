@@ -31,40 +31,52 @@ public class SpawnMobCommand implements CommandExecutor, TabCompleter {
         return true;
     }
 
+    private void sendRootUsage(CommandSender sender) {
+        Msg.send(sender, "§7Usage: §f/cm reload | update | updatebeta | spawn <mobId>");
+    }
+
     @Override
     public boolean onCommand(CommandSender sender, Command cmd, String label, String[] args) {
-        if (args.length == 1 && args[0].equalsIgnoreCase("reload")) {
-            if (noPerm(sender)) return true;
-            plugin.fullReload(sender); // unified reload
-            return true;
-        }
+        if (args.length == 0) { sendRootUsage(sender); return true; }
+        String sub = args[0].toLowerCase(Locale.ROOT);
 
-        if (args.length == 1 && args[0].equalsIgnoreCase("update")) {
-            if (noPerm(sender)) return true;
-            if (plugin.getAutoUpdate() == null) { Msg.send(sender, "§cAuto-update module not available."); return true; }
-            plugin.getAutoUpdate().manualCheck(sender);
-            return true;
+        switch (sub) {
+            case "reload" -> {
+                if (noPerm(sender)) return true;
+                plugin.fullReload(sender);
+                return true;
+            }
+            case "update" -> {
+                if (noPerm(sender)) return true;
+                if (plugin.getAutoUpdate() == null) { Msg.send(sender, "§cAuto-update module not available."); return true; }
+                plugin.getAutoUpdate().manualCheck(sender);
+                return true;
+            }
+            case "updatebeta" -> {
+                if (noPerm(sender)) return true;
+                if (plugin.getAutoUpdate() == null) { Msg.send(sender, "§cAuto-update module not available."); return true; }
+                plugin.getAutoUpdate().manualCheckBeta(sender);
+                return true;
+            }
+            case "spawn" -> {
+                if (!(sender instanceof Player)) { Msg.send(sender, "§cOnly players can spawn mobs."); return true; }
+                if (noPerm(sender)) return true;
+                if (args.length < 2) { Msg.send(sender, "§cUsage: §f/cm spawn <mobId>"); return true; }
+                String mobId = args[1];
+                Player p = (Player) sender;
+                Location loc = p.getLocation();
+                if (mobManager.spawnResolved(mobId, loc) != null) {
+                    Msg.send(sender, "§aSpawned mob: §f" + mobId);
+                } else {
+                    Msg.send(sender, "§cUnknown mob: §f" + mobId);
+                }
+                return true;
+            }
+            default -> {
+                sendRootUsage(sender);
+                return true;
+            }
         }
-
-        if (args.length == 1 && args[0].equalsIgnoreCase("updatebeta")) {
-            if (noPerm(sender)) return true;
-            if (plugin.getAutoUpdate() == null) { Msg.send(sender, "§cAuto-update module not available."); return true; }
-            plugin.getAutoUpdate().manualCheckBeta(sender);
-            return true;
-        }
-
-        if (!(sender instanceof Player)) { Msg.send(sender, "§cOnly players can use this command."); return true; }
-        if (noPerm(sender)) return true;
-        if (args.length < 1) { Msg.send(sender, "§7Usage: /" + label + " <mobId>|reload|update"); return true; }
-        Player p = (Player) sender;
-        Location loc = p.getLocation();
-        String query = String.join(" ", args);
-        if (mobManager.spawnResolved(query, loc) != null) {
-            Msg.send(sender, "§aSpawned mob: §f" + query);
-        } else {
-            Msg.send(sender, "§cUnknown mob: §f" + query + "§7 (try id or display name)");
-        }
-        return true;
     }
 
     @Override
@@ -75,6 +87,9 @@ public class SpawnMobCommand implements CommandExecutor, TabCompleter {
             if ("reload".startsWith(partial) && sender.hasPermission(CM.PERM_ADMIN)) out.add("reload");
             if ("update".startsWith(partial) && sender.hasPermission(CM.PERM_ADMIN)) out.add("update");
             if ("updatebeta".startsWith(partial) && sender.hasPermission(CM.PERM_ADMIN)) out.add("updatebeta");
+            if ("spawn".startsWith(partial) && sender.hasPermission(CM.PERM_ADMIN)) out.add("spawn");
+        } else if (args.length == 2 && args[0].equalsIgnoreCase("spawn")) {
+            String partial = args[1].toLowerCase(Locale.ROOT);
             for (String id : mobManager.getMobIds()) if (id.startsWith(partial)) out.add(id);
         }
         return out;
