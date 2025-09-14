@@ -114,6 +114,7 @@ public class MobManager {
             Map<SkillTrigger, List<SkillNode>> skills = new HashMap<>();
             Map<DamageCause, Double> damageMods = new HashMap<>();
             List<DropSpec> drops = new ArrayList<>();
+            MoneySpec money = null;
             // abilities
             ConfigurationSection abilities = cfg.getConfigurationSection("abilities");
             if (abilities != null) { loadAbilityList(abilities, "onSpawn", onSpawn); loadAbilityList(abilities, "onHit", onHit); loadAbilityList(abilities, "onDamaged", onDamaged); }
@@ -133,10 +134,32 @@ public class MobManager {
             // drops
             ConfigurationSection dropsSec = cfg.getConfigurationSection("drops");
             if (dropsSec != null) for (String dk : dropsSec.getKeys(false)) { ConfigurationSection d = dropsSec.getConfigurationSection(dk); if (d == null) continue; String matName = d.getString("type", d.getString("material", "STONE")); Material mat = null; try { mat = Material.valueOf(matName.toUpperCase()); } catch (IllegalArgumentException ignored) {} int min = d.getInt("min", 1); int max = d.getInt("max", min); double chance = safePrimitive(d, "chance", 1.0); if (mat != null && chance > 0) drops.add(new DropSpec(mat, min, max, chance)); }
+            // money (MoneyFromMobs integration)
+            ConfigurationSection moneySec = cfg.getConfigurationSection("money");
+            if (moneySec != null) {
+                double chance = safePrimitive(moneySec, "chance", 100.0); // percent
+                double minAmt = safePrimitive(moneySec, "min", 0.0);
+                double maxAmt = safePrimitive(moneySec, "max", minAmt);
+                int minDrops = 1; int maxDrops = 1;
+                if (moneySec.isSet("drops")) {
+                    if (moneySec.isInt("drops")) { minDrops = maxDrops = moneySec.getInt("drops"); }
+                    else {
+                        String ds = moneySec.getString("drops");
+                        if (ds != null) {
+                            String[] parts = ds.split("-", 2);
+                            try { if (parts.length == 2) { minDrops = Integer.parseInt(parts[0].trim()); maxDrops = Integer.parseInt(parts[1].trim()); } }
+                            catch (NumberFormatException ignored) {}
+                        }
+                    }
+                }
+                if (moneySec.isInt("minDrops")) minDrops = moneySec.getInt("minDrops");
+                if (moneySec.isInt("maxDrops")) maxDrops = Math.max(minDrops, moneySec.getInt("maxDrops"));
+                if (chance > 0 && maxAmt >= 0) money = new MoneySpec(chance, minAmt, maxAmt, Math.max(1, minDrops), Math.max(minDrops, maxDrops));
+            }
 
             MobDefinition def = new MobDefinition(id, type, health, attack, speed, followRange, armor, armorTough, kbResist,
                     displayName, faction, passiveAI, minLevel, maxLevel, healthPerLevel, attackPerLevel,
-                    onSpawn, onHit, onDamaged, skills, damageMods, drops,
+                    onSpawn, onHit, onDamaged, skills, damageMods, drops, money,
                     natEnabled, natChance, natBiomes, natReplace, natWeight,
                     natCapChunk);
             definitions.put(id.toLowerCase(Locale.ROOT), def);

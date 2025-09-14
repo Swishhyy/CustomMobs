@@ -32,6 +32,7 @@ public final class MobDefinition {
     private final Map<SkillTrigger, List<SkillNode>> skills; // new skill system
     private final Map<DamageCause, Double> damageMultipliers; // cause -> multiplier
     private final List<DropSpec> drops; // custom drops
+    private final MoneySpec money; // optional MoneyFromMobs spec
 
     private final boolean naturalEnabled;
     private final double naturalChance;
@@ -48,6 +49,7 @@ public final class MobDefinition {
                          Map<SkillTrigger, List<SkillNode>> skills,
                          Map<DamageCause, Double> damageMultipliers,
                          List<DropSpec> drops,
+                         MoneySpec money,
                          boolean naturalEnabled, double naturalChance, java.util.Set<String> naturalBiomes,
                          boolean naturalReplace, double naturalWeight,
                          Integer naturalCapChunk) {
@@ -73,6 +75,7 @@ public final class MobDefinition {
         this.skills = skills == null ? Collections.emptyMap() : Collections.unmodifiableMap(skills);
         this.damageMultipliers = damageMultipliers == null ? Collections.emptyMap() : Collections.unmodifiableMap(damageMultipliers);
         this.drops = drops == null ? Collections.emptyList() : Collections.unmodifiableList(drops);
+        this.money = money;
         this.naturalEnabled = naturalEnabled;
         this.naturalChance = naturalChance;
         this.naturalBiomes = naturalBiomes == null ? java.util.Collections.emptySet() : java.util.Collections.unmodifiableSet(naturalBiomes);
@@ -104,6 +107,7 @@ public final class MobDefinition {
     public Map<SkillTrigger, List<SkillNode>> skills() { return skills; }
     public Map<DamageCause, Double> damageMultipliers() { return damageMultipliers; }
     public List<DropSpec> drops() { return drops; }
+    public MoneySpec money() { return money; }
     public boolean naturalEnabled() { return naturalEnabled; }
     public double naturalChance() { return naturalChance; }
     public java.util.Set<String> naturalBiomes() { return naturalBiomes; }

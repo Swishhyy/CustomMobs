@@ -11,6 +11,7 @@ import me.swishhyy.customMobs.update.AutoUpdate;
 import me.swishhyy.customMobs.util.BannerUtil;
 import me.swishhyy.customMobs.faction.FactionManager;
 import me.swishhyy.customMobs.util.Msg;
+import me.swishhyy.customMobs.integration.MoneyFromMobsHook;
 
 public final class CustomMobs extends JavaPlugin {
 
@@ -29,6 +30,11 @@ public final class CustomMobs extends JavaPlugin {
         autoUpdate.startOrSchedule();
         getServer().getPluginManager().registerEvents(new MobListener(mobManager, factionManager), this);
         getServer().getPluginManager().registerEvents(new NaturalSpawnListener(mobManager), this);
+        // MoneyFromMobs soft hook
+        if (getServer().getPluginManager().getPlugin("MoneyFromMobs") != null) {
+            try { new MoneyFromMobsHook(this, mobManager).register(); getLogger().info("MoneyFromMobs detected - custom money drops enabled."); }
+            catch (Exception ex) { getLogger().warning("Failed to initialize MoneyFromMobs integration: " + ex.getMessage()); }
+        }
         // Register root command /cm with subcommands
         if (getCommand("cm") != null) {
             SpawnMobCommand cmd = new SpawnMobCommand(this, mobManager);
