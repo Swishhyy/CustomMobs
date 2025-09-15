@@ -7,6 +7,8 @@ import org.bukkit.plugin.java.JavaPlugin;
 import java.io.File;
 import java.util.*;
 
+import me.swishhyy.customMobs.mob.MobBehavior;
+
 public final class FactionManager {
     private final JavaPlugin plugin;
     private final Map<String, FactionRelation> relations = new HashMap<>();
@@ -30,8 +32,10 @@ public final class FactionManager {
             if (!(cfg.get(fac) instanceof org.bukkit.configuration.ConfigurationSection sec)) continue;
             Set<String> allies = new HashSet<>(sec.getStringList("allies"));
             Set<String> hostiles = new HashSet<>(sec.getStringList("hostiles"));
-            allies.add(fac);
-            relations.put(fac.toLowerCase(Locale.ROOT), new FactionRelation(toLower(allies), toLower(hostiles)));
+            allies.add(fac); // self ally
+            String beh = sec.getString("default_behavior", null);
+            MobBehavior defaultBehavior = MobBehavior.fromString(beh, null);
+            relations.put(fac.toLowerCase(Locale.ROOT), new FactionRelation(toLower(allies), toLower(hostiles), defaultBehavior));
         }
     }
 
@@ -54,5 +58,11 @@ public final class FactionManager {
         return rb != null && rb.hostiles.contains(a.toLowerCase(Locale.ROOT));
     }
 
-    private record FactionRelation(Set<String> allies, Set<String> hostiles) {}
+    public MobBehavior getDefaultBehavior(String faction) {
+        if (faction == null) return null;
+        FactionRelation rel = relations.get(faction.toLowerCase(Locale.ROOT));
+        return rel == null ? null : rel.defaultBehavior;
+    }
+
+    private record FactionRelation(Set<String> allies, Set<String> hostiles, MobBehavior defaultBehavior) {}
 }

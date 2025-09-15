@@ -1,15 +1,32 @@
 type: ZOMBIE
 display: "&aTHICC Zombie"
-health: 40
-attack: 8
+
+attributes:
+  max_health: 60
+  attack_damage: 10
+  movement_speed: 0.32
+  follow_range: 45
+  armor: 4
+  armor_toughness: 2
+  knockback_resistance: 0.1
+  faction: UNDEAD
+  behavior: HOSTILE
+
 abilities:
   onHit:
     poison:
       type: POISON_TOUCH
-      duration: 100 # ticks
+      duration: 100
       amplifier: 1
-money:
-  chance: 100   # percent chance MoneyFromMobs will consider dropping
-  min: 100      # minimum money per drop
-  max: 100      # maximum money per drop
-  drops: 1-3   # random number of drops between 1 and 3
+
+equipment:
+  pieces:
+    mainhand:
+      type: IRON_SWORD
+      chance: 60
+      dropChance: 10
+      enchantFile: zombie_sword_enchants.yml
+    helmet:
+      type: GOLDEN_HELMET
+      chance: 15
+      dropChance: 5

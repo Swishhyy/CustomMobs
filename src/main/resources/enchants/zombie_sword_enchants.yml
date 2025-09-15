@@ -1,0 +1,27 @@
+enchantments:
+  SHARPNESS:
+    min: 3
+    max: 5
+    chance: 85   # 85% chance to apply (values >1 treated as percent)
+  FIRE_ASPECT:
+    level: 2
+    chance: 35   # 35% chance
+  LOOTING:
+    min: 2
+    max: 3
+    chance: 40
+  UNBREAKING:
+    min: 2
+    max: 3
+    chance: 70
+  SWEEPING_EDGE:
+    min: 2
+    max: 3
+    chance: 50
+  MENDING:
+    level: 1
+    chance: 10   # Rare
+  KNOCKBACK:
+    level: 2
+    chance: 20
+

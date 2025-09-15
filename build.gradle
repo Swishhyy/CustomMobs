@@ -12,23 +12,15 @@ repositories {
         name = "papermc-repo"
         url = "https://repo.papermc.io/repository/maven-public/"
     }
-    // MoneyFromMobs via JitPack
-    maven { url = 'https://jitpack.io' }
-    // Rosewood (for transitive dev.rosewood:rosestacker pulled by MoneyFromMobs)
-    maven { url = 'https://repo.rosewooddev.io/repository/public/' }
+    maven { url = 'https://jitpack.io' } // still available if later adding compileOnly
 }
 
 dependencies {
     compileOnly("io.papermc.paper:paper-api:1.21.8-R0.1-SNAPSHOT")
-    // Optional: MoneyFromMobs API (softdepend) - disable transitive deps if you don't need them locally
-    compileOnly('com.github.chocolf:MoneyFromMobs:4.9') { transitive = true }
 }
 
 tasks {
     runServer {
-        // Configure the Minecraft version for our task.
-        // This is the only required configuration besides applying the plugin.
-        // Your plugin's jar (or shadowJar if present) will be used automatically.
         minecraftVersion("1.21")
     }
 }

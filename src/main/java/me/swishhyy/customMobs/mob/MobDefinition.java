@@ -7,6 +7,7 @@ import me.swishhyy.customMobs.abilities.Ability;
 import me.swishhyy.customMobs.skills.SkillTrigger;
 import me.swishhyy.customMobs.skills.SkillNode;
 import org.bukkit.event.entity.EntityDamageEvent.DamageCause;
+import org.bukkit.inventory.EquipmentSlot;
 
 public final class MobDefinition {
     private final String id;
@@ -32,7 +33,10 @@ public final class MobDefinition {
     private final Map<SkillTrigger, List<SkillNode>> skills; // new skill system
     private final Map<DamageCause, Double> damageMultipliers; // cause -> multiplier
     private final List<DropSpec> drops; // custom drops
-    private final MoneySpec money; // optional MoneyFromMobs spec
+    // New equipment data
+    private final EquipmentSet equipmentSet; // may be null
+    private final Map<EquipmentSlot, EquipmentPiece> equipmentPieces; // slot -> piece
+    private final AttributeRanges attributeRanges; // optional ranges for randomization
 
     private final boolean naturalEnabled;
     private final double naturalChance;
@@ -40,6 +44,7 @@ public final class MobDefinition {
     private final boolean naturalReplace;
     private final double naturalWeight;
     private final Integer naturalCapChunk; // removed naturalCapBiome
+    private final MobBehavior behavior; // PASSIVE, NEUTRAL, HOSTILE
 
     public MobDefinition(String id, String type, double health, double attack,
                          Double speed, Double followRange, Double armor, Double armorToughness, Double knockbackResist,
@@ -49,7 +54,10 @@ public final class MobDefinition {
                          Map<SkillTrigger, List<SkillNode>> skills,
                          Map<DamageCause, Double> damageMultipliers,
                          List<DropSpec> drops,
-                         MoneySpec money,
+                         EquipmentSet equipmentSet,
+                         Map<EquipmentSlot, EquipmentPiece> equipmentPieces,
+                         AttributeRanges attributeRanges,
+                         MobBehavior behavior,
                          boolean naturalEnabled, double naturalChance, java.util.Set<String> naturalBiomes,
                          boolean naturalReplace, double naturalWeight,
                          Integer naturalCapChunk) {
@@ -75,7 +83,10 @@ public final class MobDefinition {
         this.skills = skills == null ? Collections.emptyMap() : Collections.unmodifiableMap(skills);
         this.damageMultipliers = damageMultipliers == null ? Collections.emptyMap() : Collections.unmodifiableMap(damageMultipliers);
         this.drops = drops == null ? Collections.emptyList() : Collections.unmodifiableList(drops);
-        this.money = money;
+        this.equipmentSet = equipmentSet;
+        this.equipmentPieces = equipmentPieces == null ? java.util.Collections.emptyMap() : java.util.Collections.unmodifiableMap(equipmentPieces);
+        this.attributeRanges = attributeRanges;
+        this.behavior = behavior == null ? MobBehavior.HOSTILE : behavior;
         this.naturalEnabled = naturalEnabled;
         this.naturalChance = naturalChance;
         this.naturalBiomes = naturalBiomes == null ? java.util.Collections.emptySet() : java.util.Collections.unmodifiableSet(naturalBiomes);
@@ -107,11 +118,14 @@ public final class MobDefinition {
     public Map<SkillTrigger, List<SkillNode>> skills() { return skills; }
     public Map<DamageCause, Double> damageMultipliers() { return damageMultipliers; }
     public List<DropSpec> drops() { return drops; }
-    public MoneySpec money() { return money; }
+    public EquipmentSet equipmentSet() { return equipmentSet; }
+    public Map<EquipmentSlot, EquipmentPiece> equipmentPieces() { return equipmentPieces; }
+    public AttributeRanges attributeRanges() { return attributeRanges; }
     public boolean naturalEnabled() { return naturalEnabled; }
     public double naturalChance() { return naturalChance; }
     public java.util.Set<String> naturalBiomes() { return naturalBiomes; }
     public boolean naturalReplace() { return naturalReplace; }
     public double naturalWeight() { return naturalWeight; }
     public Integer naturalCapChunk() { return naturalCapChunk; }
+    public MobBehavior behavior() { return behavior; }
 }
