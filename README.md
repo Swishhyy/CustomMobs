@@ -1,5 +1,4 @@
-# CustomMobs – Concise Config Reference
-Minimal charts + focused examples.
+# CustomMobs – Documentation
 
 ---
 ## 1. Mob Definition (`custom/<id>.yml`)
@@ -267,4 +266,3 @@ abilities:
 ```
 
 ---
-Concise, non‑repeating: use charts + examples to mix features.
